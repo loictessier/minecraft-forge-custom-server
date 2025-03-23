@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  forge:
+    build: .
+    container_name: forge-server
+    ports:
+      - "25565:25565"
+    volumes:
+      - ./mods:/minecraft/mods
+      - ./data:/minecraft/world
+      - ./config:/minecraft/config
+    restart: unless-stopped
