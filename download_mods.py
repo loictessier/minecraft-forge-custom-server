@@ -3,9 +3,13 @@ import json
 import requests
 
 
-API_KEY = "PASTE_YOUR_API_KEY_HERE"
+API_KEY = os.environ.get("CURSEFORGE_API_KEY")
+if not API_KEY:
+    print("Missing Curseforge API key! Define CURSEFORGE_API_KEY.")
+    exit(1)
+
 MODS_DIR = "mods"
-MANIFEST_PATH = MODS_DIR + "/manifest.json"
+MANIFEST_PATH = os.path.join(MODS_DIR, "manifest.json")
 
 os.makedirs(MODS_DIR, exist_ok=True)
 
@@ -23,11 +27,24 @@ for mod in files:
     project_id = mod["projectID"]
     file_id = mod["fileID"]
 
+    info_url = f"https://api.curseforge.com/v1/mods/{project_id}/files/{file_id}"
+    info_response = requests.get(info_url, headers=headers)
+    if info_response.status_code == 200:
+        file_info = info_response.json()["data"]
+        game_versions = file_info["gameVersions"]
+
+        if "Forge" not in game_versions:
+            print(f"Skipping non-mod file {project_id}:{file_id} (game_versions {game_versions})")
+            continue
+    else:
+        print(f"Failed to fetch file info for {project_id}:{file_id}")
+        continue
+
     url = f"https://api.curseforge.com/v1/mods/{project_id}/files/{file_id}/download-url"
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         download_url = response.json()["data"]
-        print(f"Téléchargement : {download_url}")
+        print(f"Downloading: {download_url}")
 
         mod_filename = download_url.split("/")[-1]
         dest_path = os.path.join(MODS_DIR, mod_filename)
@@ -37,4 +54,4 @@ for mod in files:
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
     else:
-        print(f"Échec pour {project_id}:{file_id}")
+        print(f"Failure for {project_id}:{file_id}")
