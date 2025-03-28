@@ -13,7 +13,7 @@ RUN wget -O forge-1.20.1-47.4.0-installer.jar https://maven.minecraftforge.net/n
     && java -jar forge-1.20.1-47.4.0-installer.jar --installServer
 
 RUN echo "eula=true" > eula.txt \
-    && echo "-Xms2G\n-Xmx3G" > user_jvm_args.txt
+    && echo "-Xms3G\n-Xmx6G" > user_jvm_args.txt
 
 RUN chmod +x run.sh
 
