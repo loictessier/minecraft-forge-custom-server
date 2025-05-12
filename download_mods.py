@@ -3,6 +3,13 @@ import json
 import requests
 
 
+def load_client_only_mod_ids(path="client_only_mods.txt"):
+    if not os.path.exists(path):
+        return set()
+    with open(path, "r") as f:
+        return set(int(line.strip()) for line in f if line.strip().isdigit())
+
+
 API_KEY = os.environ.get("CURSEFORGE_API_KEY")
 if not API_KEY:
     print("Missing Curseforge API key! Define CURSEFORGE_API_KEY.")
@@ -10,6 +17,8 @@ if not API_KEY:
 
 MODS_DIR = "mods"
 MANIFEST_PATH = os.path.join(MODS_DIR, "manifest.json")
+
+client_only_ids = load_client_only_mod_ids()
 
 os.makedirs(MODS_DIR, exist_ok=True)
 
@@ -26,6 +35,10 @@ headers = {
 for mod in files:
     project_id = mod["projectID"]
     file_id = mod["fileID"]
+
+    if project_id in client_only_ids:
+        print(f"Skipping client-only mod {project_id}")
+        continue
 
     info_url = f"https://api.curseforge.com/v1/mods/{project_id}/files/{file_id}"
     info_response = requests.get(info_url, headers=headers)
